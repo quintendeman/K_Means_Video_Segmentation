@@ -1,0 +1,6 @@
+-feature normalization (column or row?)
+-get full sized results
+-elbow method for automatic k detection
+-video scene segmentation by time
+-user interface (JavaFX?)
+-run code on GPU
