@@ -6,7 +6,7 @@ import videoprocessing as vp
 #Video processing
 path = 'resources\\clip3.mp4'
 target_resolution = (100,150)
-target_fps = 4
+target_fps = 2
 
 print('Processing video...')
 video_array = vp.video_to_array(path,target_resolution,target_fps)
@@ -20,7 +20,7 @@ max_iter = 20
 print('Performing K-means...')
 centroids = km.initialize_centroids(X, k)
 for i in range(max_iter):
-    print('iteration'+str(i+1)+' out of '+str(max_iter))
+    print('iteration '+str(i+1)+' out of '+str(max_iter))
     closest_centroids = km.find_closest_centroids(X, centroids)
     centroids = km.update_centroids(X, k, closest_centroids)
 print('Done.')
