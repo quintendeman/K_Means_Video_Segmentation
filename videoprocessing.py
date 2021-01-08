@@ -6,6 +6,17 @@ def video_to_array (path,resolution,fps):
     frameCount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     framekeep = int(cap.get(cv2.CAP_PROP_FPS)/fps)
     videoArray = np.empty(((frameCount-1)//framekeep+1,resolution[0]*resolution[1]*3),np.dtype('float32'))
+    i = 0
+    while i < frameCount:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, i)
+        ret, frame = cap.read()
+        frame = cv2.resize(frame, (resolution[1],resolution[0]))
+        frame = frame.astype('float32')/255
+        videoArray[int(i/framekeep),:] = np.reshape(frame, resolution[0]*resolution[1]*3)
+        i += framekeep
+    return videoArray
+
+"""
     for i in range(frameCount):
         ret, frame = cap.read()
         if i%framekeep == 0:
@@ -13,3 +24,4 @@ def video_to_array (path,resolution,fps):
             frame = frame.astype('float32')/255
             videoArray[int(i/framekeep),:] = np.reshape(frame, resolution[0]*resolution[1]*3)
     return videoArray
+"""

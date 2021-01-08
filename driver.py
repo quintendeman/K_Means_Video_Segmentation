@@ -14,8 +14,8 @@ print('Done.')
 
 #K-means algorithm
 X = video_array
-k = 20
-max_iter = 20
+k = 5
+max_iter = 10
 
 print('Performing K-means...')
 centroids = km.initialize_centroids(X, k)
