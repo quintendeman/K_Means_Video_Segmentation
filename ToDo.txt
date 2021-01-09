@@ -4,6 +4,3 @@
 -video scene segmentation by time
 -user interface (JavaFX?)
 -run code on GPU
-
-Faster video processing:
-https://answers.opencv.org/question/24714/skipping-frames-in-videocapture/

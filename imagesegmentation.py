@@ -4,7 +4,7 @@ from PIL import Image
 import kmeans as km
 
 #Image processing
-image = Image.open('image1.jpg')
+image = Image.open('resources\\image1.jpg')
 image_array = np.asarray(image)
 height = image_array.shape[0]
 width = image_array.shape[1]
