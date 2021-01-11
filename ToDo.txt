@@ -1,4 +1,3 @@
--feature normalization (column or row?)
 -add time features for thumbnail
 -get full sized results
 -elbow method for automatic k detection

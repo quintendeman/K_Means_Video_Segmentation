@@ -6,18 +6,22 @@ import videoprocessing as vp
 
 def main():
     #Video processing
-    path = 'resources\\clip3.mp4'
+    path = 'resources\\clip1.mp4'
     target_resolution = (200,300)
     target_fps = 1
 
-    print('Processing video...')
+    print('Loading video...')
     video_array = vp.video_to_array(path,target_resolution,target_fps)
     print('Done.')
 
     #K-means algorithm
     X = torch.from_numpy(video_array).to(torch.device('cuda'))
-    k = 5
-    max_iter = 20
+    k = 20
+    max_iter = 10
+    
+    #Feature normalization
+    km.normalize_features(X,0)
+    km.normalize_features(X,1)
 
     print('Performing K-means...')
     centroids = km.initialize_centroids(X, k)
@@ -27,14 +31,12 @@ def main():
         centroids = km.update_centroids(X, k, closest_centroids)
     print('Done.')
 
-    #display centroids
-    #for i in range(k):
-    #    image = centroids[i,:].reshape(target_resolution[0],target_resolution[1],3)
-    #    cv2.imshow('centroid '+str(i), image)
-
-    #display thumbnails
+    #display centroids and thumbnails
     closest_points = km.find_closest_points(X, centroids)
     for i in range(k):
+        image = centroids[i,:].reshape(target_resolution[0],target_resolution[1],3)
+        plt.imshow(cv2.cvtColor(image.cpu().numpy(),cv2.COLOR_BGR2RGB))
+        plt.show()
         image = X[closest_points[i],:].reshape(target_resolution[0],target_resolution[1],3)
         plt.imshow(cv2.cvtColor(image.cpu().numpy(),cv2.COLOR_BGR2RGB))
         plt.show()
