@@ -6,7 +6,7 @@ import videoprocessing as vp
 
 def main():
     #Video processing
-    path = 'resources\\clip1.mp4'
+    path = 'resources\\clip3.mp4'
     target_resolution = (200,300)
     target_fps = 1
 
@@ -24,7 +24,7 @@ def main():
 
     #K-means algorithm
     k = 10
-    max_iter = 20
+    max_iter = 50
     
     print('Performing K-means...')
     centroids = km.initialize_centroids(X, k)
@@ -34,7 +34,9 @@ def main():
         centroids = km.update_centroids(X, k, closest_centroids)
     print('Done.')
 
-    print(closest_centroids)
+    #display the centroid for every frame, we sort the centroids by time for convenience
+    centroids = centroids[centroids[:,centroids.shape[1]-1].sort().indices]
+    print(km.find_closest_centroids(X,centroids))
 
     #display centroids and thumbnails
     closest_points = km.find_closest_points(X, centroids)

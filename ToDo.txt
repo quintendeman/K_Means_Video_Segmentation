@@ -1,4 +1,3 @@
--add time features for thumbnail
 -get full sized results
 -elbow method for automatic k detection
 -video scene segmentation by time
