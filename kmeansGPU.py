@@ -4,12 +4,13 @@ import torch
 
 device = torch.device('cuda')
 dtype = torch.float32
+epsilon = torch.tensor(0.0001,dtype=torch.float32)
 
-def normalize_features (X,axis):
+def scale_features (X,axis):
     if axis == 0:
-        return (X-X.mean(0))/X.std(0)
+        return (X-X.min(0).values)/((X-X.min(0).values).max(0).values+epsilon)
     elif axis == 1:
-        return (X-X.mean(1).reshape((X.shape[0],1)))/X.std(1).reshape((X.shape[0],1))
+        return (X-X.min(1).values.reshape((X.shape[0],1)))/((X-X.min(1).values.reshape((X.shape[0],1))).max(1).values.reshape((X.shape[0],1))+epsilon)
 
 def initialize_centroids (X,k):
     centroids = torch.empty((k,X.shape[1]), device=device, dtype=dtype)

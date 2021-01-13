@@ -16,12 +16,12 @@ def main():
 
     #K-means algorithm
     X = torch.from_numpy(video_array).to(torch.device('cuda'))
-    k = 20
+    k = 10
     max_iter = 10
     
     #Feature normalization
-    km.normalize_features(X,0)
-    km.normalize_features(X,1)
+    #X = km.scale_features(X,0)
+    X = km.scale_features(X,1)
 
     print('Performing K-means...')
     centroids = km.initialize_centroids(X, k)
