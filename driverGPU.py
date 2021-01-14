@@ -6,7 +6,7 @@ import videoprocessing as vp
 
 def main():
     #Video processing
-    path = 'resources\\clip3.mp4'
+    path = 'resources\\clip1.mp4'
     target_resolution = (200,300)
     target_fps = 1
 
@@ -40,15 +40,15 @@ def main():
 
     #display centroids and thumbnails
     closest_points = km.find_closest_points(X, centroids)
-    X = X[:,0:X.shape[1]-1]
+    thumbnails = vp.get_images(path,closest_points.cpu().numpy(),target_fps)
     centroids = centroids[:,0:centroids.shape[1]-1]
     for i in range(k):
         image = centroids[i,:].reshape(target_resolution[0],target_resolution[1],3)
         plt.imshow(cv2.cvtColor(image.cpu().numpy(),cv2.COLOR_BGR2RGB))
         plt.title('centroid '+str(i))
         plt.show()
-        image = X[closest_points[i],:].reshape(target_resolution[0],target_resolution[1],3)
-        plt.imshow(cv2.cvtColor(image.cpu().numpy(),cv2.COLOR_BGR2RGB))
+        image = thumbnails[i,:,:]
+        plt.imshow(cv2.cvtColor(image,cv2.COLOR_BGR2RGB))
         plt.title('thumbnail '+str(i))
         plt.show()
 

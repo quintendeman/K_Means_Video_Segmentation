@@ -45,7 +45,7 @@ def update_centroids (X,k,closest):
             centroids[i,:] = X[r.sample(range(X.shape[0]),1),:]
     return centroids
 
-#Get the data point in every cluster that is closest to the centroid
+#Get the index of the data point in every cluster that is closest to the centroid
 def find_closest_points (X,centroids):
     k = centroids.shape[0]
     distances = torch.empty((X.shape[0],k), device=device, dtype=dtype)
