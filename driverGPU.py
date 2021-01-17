@@ -15,7 +15,7 @@ def main():
     print('Done.')
 
     #Data initialization
-    time_weight = 100
+    time_weight = 1000
     
     X = torch.from_numpy(video_array).to(torch.device('cuda'))
     #X = km.scale_features(X,0)
@@ -23,8 +23,8 @@ def main():
     X = km.add_position_feature(X,time_weight)
 
     #K-means algorithm
-    k = 10
-    max_iter = 50
+    k = 16
+    max_iter = 100
     
     print('Performing K-means...')
     centroids = km.initialize_centroids(X, k)

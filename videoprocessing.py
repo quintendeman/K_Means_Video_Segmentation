@@ -24,7 +24,6 @@ def get_images(path,images,fps):
     frameSkip = int(cap.get(cv2.CAP_PROP_FPS)/fps)
     width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    print(height, width)
     imageArray = np.empty((len(images),height,width,3),np.dtype('float32'))
     for i in range(len(images)):
         cap.set(cv2.CAP_PROP_POS_FRAMES,frameSkip*images[i])
