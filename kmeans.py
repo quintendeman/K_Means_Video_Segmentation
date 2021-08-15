@@ -1,6 +1,18 @@
 import numpy as np
 import random as r
 
+#Scales the features between 0 and 1 along the row (axis=1) or column (axis=0)
+def scale_features (X,axis):
+    epsilon = 0.0001
+    if axis == 0:
+        return (X-X.min(0))/((X-X.min(0)).max(0)+epsilon)
+    elif axis == 1:
+        return (X-X.min(1).reshape((X.shape[0],1)))/((X-X.min(1).reshape((X.shape[0],1))).max(1).reshape((X.shape[0],1))+epsilon)
+
+#Add a feature to the data of the time in the video (represented by row index in the tensor)
+def add_position_feature (X,weight):
+    return np.append(X, weight/X.shape[0]*np.arange(X.shape[0]).reshape(X.shape[0],1), 1)
+
 def initialize_centroids (X,k):
     centroids = np.empty((k,X.shape[1]),np.dtype('float32'))
     indices = r.sample(range(X.shape[0]),k)

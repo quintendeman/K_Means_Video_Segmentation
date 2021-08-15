@@ -7,6 +7,15 @@ from PIL import Image, ImageTk
 import kmeans as km
 import videoprocessing as vp
 
+def getLocalFile():
+    filename = filedialog.askopenfile(initialdir="/", title="Select video file", filetypes=(("Mp4 files", "*.mp4"),))
+    localPathLabel1["text"] = filename.name
+
+def getPhotoImage(image):
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = (image*255).astype(np.uint8)
+    return ImageTk.PhotoImage(Image.fromarray(image))
+
 #define the outer window
 window = tk.Tk()
 window.geometry('800x600')
@@ -32,10 +41,6 @@ controlFrame1.pack(side=tk.TOP, expand=False)
 thumbnailImages = []
 currentImage = None
 currentImageNumber = None
-
-def getLocalFile():
-    filename = filedialog.askopenfile(initialdir="/", title="Select video file", filetypes=(("Mp4 files", "*.mp4"),))
-    localPathLabel1["text"] = filename.name
 
 sourceSelectLabel1 = tk.Label(controlFrame1, text="Video Source:", width=15)
 sourceSelectLabel1.grid(padx=2, pady=2, row=0, column=0)
@@ -66,11 +71,6 @@ iterationsLabel1.grid(padx=2, pady=2, row=5, column=0)
 iterationsSelect1 = ttk.Combobox(controlFrame1, state="readonly", values=(5, 10, 15, 20, 50, 100), width=15)
 iterationsSelect1.current(1)
 iterationsSelect1.grid(padx=2, pady=2, row=5, column=1)
-
-def getPhotoImage(image):
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image = (image*255).astype(np.uint8)
-    return ImageTk.PhotoImage(Image.fromarray(image))
 
 def generateThumbnails():
     global thumbnailImages
@@ -148,5 +148,81 @@ imageDisplay = tk.Label(rightFrame1, image=currentImage, borderwidth=1, relief="
 imageDisplay.pack(side=tk.BOTTOM, fill="both", expand=True)
 
 #thumbnail recommender frame
+leftFrame2 = tk.Frame(frame2, width=200)
+leftFrame2.pack(side=tk.LEFT, fill=tk.Y, expand=False)
+rightFrame2 = tk.Frame(frame2)
+rightFrame2.pack(side=tk.LEFT, fill="both", expand=True)
+controlFrame2 = tk.Frame(leftFrame2, width=200)
+controlFrame2.pack(side=tk.TOP, expand=False)
+
+sourceSelectLabel2 = tk.Label(controlFrame2, text="Video Source:", width=15)
+sourceSelectLabel2.grid(padx=2, pady=2, row=0, column=0)
+sourceSelect2 = ttk.Combobox(controlFrame2, state="readonly", values=("clip1", "clip2", "clip3", "Use local file"), width=15)
+sourceSelect2.current(0)
+sourceSelect2.grid(padx=2, pady=2, row=0, column=1)
+localPathLabel2 = tk.Label(controlFrame2, text="", width=15, fg="blue", anchor="w")
+localPathLabel2.grid(padx=2, pady=2, row=1, column=0)
+localPathButton2 = tk.Button(controlFrame2, text="Browse local files", command=getLocalFile, width=15)
+localPathButton2.grid(padx=2, pady=2, row=1, column=1)
+fpsLabel2 = tk.Label(controlFrame2, text="Analysis FPS:", width=15)
+fpsLabel2.grid(padx=2, pady=2, row=2, column=0)
+fpsSelect2 = ttk.Combobox(controlFrame2, state="readonly", values=(0.5, 1, 2, 3, 5), width=15)
+fpsSelect2.current(1)
+fpsSelect2.grid(padx=2, pady=2, row=2, column=1)
+resLabel2 = tk.Label(controlFrame2, text="Analysis Resolution:", width=15)
+resLabel2.grid(padx=2, pady=2, row=3, column=0)
+resSelect2 = ttk.Combobox(controlFrame2, state="readonly", values=("50x50", "100x100", "200x200", "500x500"), width=15)
+resSelect2.current(1)
+resSelect2.grid(padx=2, pady=2, row=3, column=1)
+scenesLabel2 = tk.Label(controlFrame2, text="Scenes:", width=15)
+scenesLabel2.grid(padx=2, pady=2, row=4, column=0)
+scenesSelect2 = ttk.Combobox(controlFrame2, state="readonly", values=(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), width=15)
+scenesSelect2.current(4)
+scenesSelect2.grid(padx=2, pady=2, row=4, column=1)
+iterationsLabel2 = tk.Label(controlFrame2, text="Iterations:", width=15)
+iterationsLabel2.grid(padx=2, pady=2, row=5, column=0)
+iterationsSelect2 = ttk.Combobox(controlFrame2, state="readonly", values=(5, 10, 15, 20, 50, 100), width=15)
+iterationsSelect2.current(1)
+iterationsSelect2.grid(padx=2, pady=2, row=5, column=1)
+
+def detectScenes():
+    if (sourceSelect2.get() == "Use local file"):
+        path = localPathLabel2["text"]
+    else:
+        path = "resources\\" + sourceSelect2.get() + ".mp4"
+    target_fps = float(fpsSelect2.get())
+    resolutions = resSelect2.get().split("x")
+    target_resolution = (int(resolutions[0]), int(resolutions[1]))
+    progress2.set(10)
+    window.update()
+
+    time_weight = 500
+    X = vp.video_to_array(path,target_resolution,target_fps)
+    X = km.scale_features(X,1)
+    X = km.add_position_feature(X,time_weight)
+    k = int(scenesSelect2.get())
+    max_iter = int(iterationsSelect2.get())
+    progress2.set(20)
+    window.update()
+
+    centroids = km.initialize_centroids(X, k)
+    for i in range(max_iter):
+        closest_centroids = km.find_closest_centroids(X, centroids)
+        centroids = km.update_centroids(X, k, closest_centroids)
+        progress2.set(20 + 80 * (i + 1) / max_iter)
+        window.update()
+
+    centroids = centroids[np.argsort(centroids[:,-1])]
+    scenes = km.find_closest_centroids(X,centroids)
+    scenesOutput.insert(tk.END, str(scenes))
+
+startButton2 = tk.Button(leftFrame2, text="Detect Scenes", command=detectScenes, width=31)
+startButton2.pack(padx=2, pady=2, expand=False)
+progress2 = tk.DoubleVar(value=0)
+progressBar2 = ttk.Progressbar(leftFrame2, length=225, variable=progress2, mode="determinate")
+progressBar2.pack(padx=2, pady=2, expand=False)
+
+scenesOutput = tk.Text(rightFrame2)
+scenesOutput.pack(fill="both", expand=True)
 
 window.mainloop()

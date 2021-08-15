@@ -1,3 +1,0 @@
--video scene segmentation by time
--elbow method for automatic k detection?
--user interface? (JavaFX?)
