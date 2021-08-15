@@ -29,6 +29,8 @@ rightFrame1.pack(side=tk.LEFT, fill="both", expand=True)
 controlFrame1 = tk.Frame(leftFrame1, width=200)
 controlFrame1.pack(side=tk.TOP, expand=False)
 thumbnailImages = []
+currentImage = None
+currentImageNumber = None
 
 sourceSelectLabel1 = tk.Label(controlFrame1, text="Video Source:", width=15)
 sourceSelectLabel1.grid(padx=2, pady=2, row=0, column=0)
@@ -52,7 +54,7 @@ resSelect1.grid(padx=2, pady=2, row=3, column=1)
 thumbnailsLabel1 = tk.Label(controlFrame1, text="Thumbnails:", width=15)
 thumbnailsLabel1.grid(padx=2, pady=2, row=4, column=0)
 thumbnailSelect1 = ttk.Combobox(controlFrame1, state="readonly", values=(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), width=15)
-thumbnailSelect1.current(2)
+thumbnailSelect1.current(4)
 thumbnailSelect1.grid(padx=2, pady=2, row=4, column=1)
 iterationsLabel1 = tk.Label(controlFrame1, text="Iterations:", width=15)
 iterationsLabel1.grid(padx=2, pady=2, row=5, column=0)
@@ -66,6 +68,7 @@ def getPhotoImage(image):
     return ImageTk.PhotoImage(Image.fromarray(image))
 
 def generateThumbnails():
+    global thumbnailImages
     thumbnailImages = [];
     if (sourceSelect1.get() == "Use local file"):
         path = localPathLabel1["text"]
@@ -91,12 +94,15 @@ def generateThumbnails():
         window.update()
 
     closest_points = km.find_closest_points(X, centroids)
+    thumbnails = vp.get_images(path,closest_points,target_fps)
     for i in range(k):
-        image = X[closest_points[i],:].reshape(target_resolution[0],target_resolution[1],3)
+        image = thumbnails[i,:,:]
         thumbnailImages.append(getPhotoImage(image))
-    newImage = thumbnailImages[0]
-    imageDisplay.configure(image=newImage)
-    10/0
+    global currentImage
+    currentImage = thumbnailImages[0]
+    global currentImageNumber
+    currentImageNumber = 0
+    imageDisplay.configure(image=currentImage)
     imageLabel["text"] = "Thumbnail 1"
 
 startButton1 = tk.Button(leftFrame1, text="Generate Thumbnails", command=generateThumbnails, width=31)
@@ -105,17 +111,35 @@ progress1 = tk.DoubleVar(value=0)
 progressBar1 = ttk.Progressbar(leftFrame1, length=225, variable=progress1, mode="determinate")
 progressBar1.pack(padx=2, pady=2, expand=False)
 
+def nextImage():
+    global thumbnailImages
+    global currentImage
+    global currentImageNumber
+    if(currentImageNumber+1 < len(thumbnailImages)):
+        currentImageNumber += 1
+        currentImage = thumbnailImages[currentImageNumber]
+        imageDisplay.configure(image=currentImage)
+        imageLabel["text"] = "Thumbnail " + str(currentImageNumber+1)
+
+def previousImage():
+    global thumbnailImages
+    global currentImage
+    global currentImageNumber
+    if(currentImageNumber > 0):
+        currentImageNumber -= 1
+        currentImage = thumbnailImages[currentImageNumber]
+        imageDisplay.configure(image=currentImage)
+        imageLabel["text"] = "Thumbnail " + str(currentImageNumber+1)
+
 buttonFrame = tk.Frame(rightFrame1)
 buttonFrame.pack(side=tk.TOP, fill=tk.X, expand=False)
-previousImageButton = tk.Button(buttonFrame, text="Previous", width=6)
-nextImageButton = tk.Button(buttonFrame, text="Next", width=6)
+previousImageButton = tk.Button(buttonFrame, text="Previous", command=previousImage, width=6)
+nextImageButton = tk.Button(buttonFrame, text="Next", command=nextImage, width=6)
 nextImageButton.pack(side=tk.RIGHT, expand=False)
 previousImageButton.pack(side=tk.RIGHT, expand=False)
 imageLabel = tk.Label(buttonFrame, text="No thumbnails")
 imageLabel.pack(side=tk.LEFT)
-image = Image.fromarray(np.random.randint(256, size=(500,500,3)).astype(np.uint8))
-image = ImageTk.PhotoImage(image)
-imageDisplay = tk.Label(rightFrame1, image=image, borderwidth=1, relief="solid")
+imageDisplay = tk.Label(rightFrame1, image=currentImage, borderwidth=1, relief="solid")
 imageDisplay.pack(side=tk.BOTTOM, fill="both", expand=True)
 
 #thumbnail recommender frame
