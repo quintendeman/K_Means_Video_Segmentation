@@ -196,7 +196,7 @@ def detectScenes():
     progress2.set(10)
     window.update()
 
-    time_weight = 500
+    time_weight = 200
     X = vp.video_to_array(path,target_resolution,target_fps)
     X = km.scale_features(X,1)
     X = km.add_position_feature(X,time_weight)
@@ -214,7 +214,19 @@ def detectScenes():
 
     centroids = centroids[np.argsort(centroids[:,-1])]
     scenes = km.find_closest_centroids(X,centroids)
-    scenesOutput.insert(tk.END, str(scenes))
+    print(scenes)
+    for i in range(k):
+        scenesOutput.insert(tk.END, "Scene "+ str(i+1) + ":\n")
+        start = None
+        for j in range(len(scenes)+1):
+            if (start == None):
+                if (j != len(scenes) and scenes[j] == i):
+                    start = j
+            else:
+                if (j == len(scenes) or scenes[j] != i):
+                    end = j
+                    scenesOutput.insert(tk.END, str(start/target_fps) + "s - " + str(end/target_fps) + "s\n")
+                    start = None
 
 startButton2 = tk.Button(leftFrame2, text="Detect Scenes", command=detectScenes, width=31)
 startButton2.pack(padx=2, pady=2, expand=False)
