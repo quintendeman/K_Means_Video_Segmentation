@@ -1,5 +1,10 @@
 import tkinter as tk
 from tkinter import ttk
+import numpy as np
+import cv2
+from PIL import Image, ImageTk
+import kmeans as km
+import videoprocessing as vp
 
 #define the outer window
 window = tk.Tk()
@@ -17,80 +22,102 @@ notebook.add(frame1, text="Thumbnail Recommender")
 notebook.add(frame2, text="Scene Detector")
 
 #thumbnail recommender frame
-LeftFrame1 = tk.Frame(frame1, width=200)
-LeftFrame1.pack(side=tk.LEFT, fill=tk.Y, expand=False)
-RightFrame1 = tk.Frame(frame1, background="blue")
-RightFrame1.pack(side=tk.LEFT, fill="both", expand=True)
-
-controlFrame1 = tk.Frame(LeftFrame1, width=200)
+leftFrame1 = tk.Frame(frame1, width=200)
+leftFrame1.pack(side=tk.LEFT, fill=tk.Y, expand=False)
+rightFrame1 = tk.Frame(frame1)
+rightFrame1.pack(side=tk.LEFT, fill="both", expand=True)
+controlFrame1 = tk.Frame(leftFrame1, width=200)
 controlFrame1.pack(side=tk.TOP, expand=False)
+thumbnailImages = []
+
 sourceSelectLabel1 = tk.Label(controlFrame1, text="Video Source:", width=15)
 sourceSelectLabel1.grid(padx=2, pady=2, row=0, column=0)
-sourceSelect1 = ttk.Combobox(controlFrame1, state="readonly", values=("Clip 1", "Clip 2", "Clip 3", "Use local file"), width=15)
+sourceSelect1 = ttk.Combobox(controlFrame1, state="readonly", values=("clip1", "clip2", "clip3", "Use local file"), width=15)
 sourceSelect1.current(0)
 sourceSelect1.grid(padx=2, pady=2, row=0, column=1)
 localPathLabel1 = tk.Label(controlFrame1, text="", width=15, fg="blue", anchor="w")
 localPathLabel1.grid(padx=2, pady=2, row=1, column=0)
 localPathButton1 = tk.Button(controlFrame1, text="Browse local files", width=15)
 localPathButton1.grid(padx=2, pady=2, row=1, column=1)
-FPSLabel1 = tk.Label(controlFrame1, text="Analysis FPS:", width=15)
-FPSLabel1.grid(padx=2, pady=2, row=2, column=0)
-FPSSelect1 = ttk.Combobox(controlFrame1, state="readonly", values=(0.5, 1, 2, 3, 5), width=15)
-FPSSelect1.current(2)
-FPSSelect1.grid(padx=2, pady=2, row=2, column=1)
-ResLabel1 = tk.Label(controlFrame1, text="Analysis Resolution:", width=15)
-ResLabel1.grid(padx=2, pady=2, row=3, column=0)
-ResSelect1 = ttk.Combobox(controlFrame1, state="readonly", values=("50x50", "100x100", "200x200", "500x500"), width=15)
-ResSelect1.current(1)
-ResSelect1.grid(padx=2, pady=2, row=3, column=1)
-ThumbnailsLabel1 = tk.Label(controlFrame1, text="Thumbnails:", width=15)
-ThumbnailsLabel1.grid(padx=2, pady=2, row=4, column=0)
-ThumbnailSelect1 = ttk.Combobox(controlFrame1, state="readonly", values=(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), width=15)
-ThumbnailSelect1.current(4)
-ThumbnailSelect1.grid(padx=2, pady=2, row=4, column=1)
-IterationsLabel1 = tk.Label(controlFrame1, text="Iterations:", width=15)
-IterationsLabel1.grid(padx=2, pady=2, row=5, column=0)
-IterationsSelect1 = ttk.Combobox(controlFrame1, state="readonly", values=(5, 10, 15, 20, 50, 100), width=15)
-IterationsSelect1.current(1)
-IterationsSelect1.grid(padx=2, pady=2, row=5, column=1)
-StartButton1 = tk.Button(LeftFrame1, text="Generate Thumbnails", width=31)
-StartButton1.pack(padx=2, pady=2, expand=False)
-ProgressBar1 = ttk.Progressbar(LeftFrame1, length=225, mode="determinate")
-ProgressBar1.pack(padx=2, pady=2, expand=False)
+fpsLabel1 = tk.Label(controlFrame1, text="Analysis FPS:", width=15)
+fpsLabel1.grid(padx=2, pady=2, row=2, column=0)
+fpsSelect1 = ttk.Combobox(controlFrame1, state="readonly", values=(0.5, 1, 2, 3, 5), width=15)
+fpsSelect1.current(1)
+fpsSelect1.grid(padx=2, pady=2, row=2, column=1)
+resLabel1 = tk.Label(controlFrame1, text="Analysis Resolution:", width=15)
+resLabel1.grid(padx=2, pady=2, row=3, column=0)
+resSelect1 = ttk.Combobox(controlFrame1, state="readonly", values=("50x50", "100x100", "200x200", "500x500"), width=15)
+resSelect1.current(1)
+resSelect1.grid(padx=2, pady=2, row=3, column=1)
+thumbnailsLabel1 = tk.Label(controlFrame1, text="Thumbnails:", width=15)
+thumbnailsLabel1.grid(padx=2, pady=2, row=4, column=0)
+thumbnailSelect1 = ttk.Combobox(controlFrame1, state="readonly", values=(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), width=15)
+thumbnailSelect1.current(2)
+thumbnailSelect1.grid(padx=2, pady=2, row=4, column=1)
+iterationsLabel1 = tk.Label(controlFrame1, text="Iterations:", width=15)
+iterationsLabel1.grid(padx=2, pady=2, row=5, column=0)
+iterationsSelect1 = ttk.Combobox(controlFrame1, state="readonly", values=(5, 10, 15, 20, 50, 100), width=15)
+iterationsSelect1.current(1)
+iterationsSelect1.grid(padx=2, pady=2, row=5, column=1)
+
+def getPhotoImage(image):
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = (image*255).astype(np.uint8)
+    return ImageTk.PhotoImage(Image.fromarray(image))
+
+def generateThumbnails():
+    thumbnailImages = [];
+    if (sourceSelect1.get() == "Use local file"):
+        path = localPathLabel1["text"]
+    else:
+        path = "resources\\" + sourceSelect1.get() + ".mp4"
+    target_fps = float(fpsSelect1.get())
+    resolutions = resSelect1.get().split("x")
+    target_resolution = (int(resolutions[0]), int(resolutions[1]))
+    progress1.set(10)
+    window.update()
+
+    X = vp.video_to_array(path,target_resolution,target_fps)
+    k = int(thumbnailSelect1.get())
+    max_iter = int(iterationsSelect1.get())
+    progress1.set(20)
+    window.update()
+
+    centroids = km.initialize_centroids(X, k)
+    for i in range(max_iter):
+        closest_centroids = km.find_closest_centroids(X, centroids)
+        centroids = km.update_centroids(X, k, closest_centroids)
+        progress1.set(20 + 80 * (i + 1) / max_iter)
+        window.update()
+
+    closest_points = km.find_closest_points(X, centroids)
+    for i in range(k):
+        image = X[closest_points[i],:].reshape(target_resolution[0],target_resolution[1],3)
+        thumbnailImages.append(getPhotoImage(image))
+    newImage = thumbnailImages[0]
+    imageDisplay.configure(image=newImage)
+    10/0
+    imageLabel["text"] = "Thumbnail 1"
+
+startButton1 = tk.Button(leftFrame1, text="Generate Thumbnails", command=generateThumbnails, width=31)
+startButton1.pack(padx=2, pady=2, expand=False)
+progress1 = tk.DoubleVar(value=0)
+progressBar1 = ttk.Progressbar(leftFrame1, length=225, variable=progress1, mode="determinate")
+progressBar1.pack(padx=2, pady=2, expand=False)
+
+buttonFrame = tk.Frame(rightFrame1)
+buttonFrame.pack(side=tk.TOP, fill=tk.X, expand=False)
+previousImageButton = tk.Button(buttonFrame, text="Previous", width=6)
+nextImageButton = tk.Button(buttonFrame, text="Next", width=6)
+nextImageButton.pack(side=tk.RIGHT, expand=False)
+previousImageButton.pack(side=tk.RIGHT, expand=False)
+imageLabel = tk.Label(buttonFrame, text="No thumbnails")
+imageLabel.pack(side=tk.LEFT)
+image = Image.fromarray(np.random.randint(256, size=(500,500,3)).astype(np.uint8))
+image = ImageTk.PhotoImage(image)
+imageDisplay = tk.Label(rightFrame1, image=image, borderwidth=1, relief="solid")
+imageDisplay.pack(side=tk.BOTTOM, fill="both", expand=True)
 
 #thumbnail recommender frame
-controlFrame2 = tk.Frame(frame2, width=200)
-controlFrame2.pack(side=tk.LEFT, fill=tk.Y, expand=False)
-outputFrame2 = tk.Frame(frame2, background="red")
-outputFrame2.pack(side=tk.LEFT, fill="both", expand=True)
-sourceSelectLabel2 = tk.Label(controlFrame2, text="Video Source:", width=15)
-sourceSelectLabel2.grid(padx=2, pady=2, row=0, column=0)
-sourceSelect2 = ttk.Combobox(controlFrame2, state="readonly", values=("Clip 1", "Clip 2", "Clip 3", "Use local file"), width=15)
-sourceSelect2.current(0)
-sourceSelect2.grid(padx=2, pady=2, row=0, column=1)
-localPathLabel2 = tk.Label(controlFrame2, text="", width=15, fg="blue", anchor="w")
-localPathLabel2.grid(padx=2, pady=2, row=1, column=0)
-localPathButton2 = tk.Button(controlFrame2, text="Browse local files", width=15)
-localPathButton2.grid(padx=2, pady=2, row=1, column=1)
-FPSLabel2 = tk.Label(controlFrame2, text="Analysis FPS:", width=15)
-FPSLabel2.grid(padx=2, pady=2, row=2, column=0)
-FPSSelect2 = ttk.Combobox(controlFrame2, state="readonly", values=(0.5, 1, 2, 3, 5), width=15)
-FPSSelect2.current(2)
-FPSSelect2.grid(padx=2, pady=2, row=2, column=1)
-ResLabel2 = tk.Label(controlFrame2, text="Analysis Resolution:", width=15)
-ResLabel2.grid(padx=2, pady=2, row=3, column=0)
-ResSelect2 = ttk.Combobox(controlFrame2, state="readonly", values=("50x50", "100x100", "200x200", "500x500"), width=15)
-ResSelect2.current(1)
-ResSelect2.grid(padx=2, pady=2, row=3, column=1)
-ThumbnailsLabel2 = tk.Label(controlFrame2, text="Thumbnails:", width=15)
-ThumbnailsLabel2.grid(padx=2, pady=2, row=4, column=0)
-ThumbnailSelect2 = ttk.Combobox(controlFrame2, state="readonly", values=(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), width=15)
-ThumbnailSelect2.current(4)
-ThumbnailSelect2.grid(padx=2, pady=2, row=4, column=1)
-IterationsLabel2 = tk.Label(controlFrame2, text="Iterations:", width=15)
-IterationsLabel2.grid(padx=2, pady=2, row=5, column=0)
-IterationsSelect2 = ttk.Combobox(controlFrame2, state="readonly", values=(5, 10, 15, 20, 50, 100), width=15)
-IterationsSelect2.current(1)
-IterationsSelect2.grid(padx=2, pady=2, row=5, column=1)
 
 window.mainloop()

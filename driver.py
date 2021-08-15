@@ -1,4 +1,3 @@
-import numpy as np
 import cv2
 import kmeans as km
 import videoprocessing as vp
