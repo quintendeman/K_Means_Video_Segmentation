@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import filedialog
 from tkinter import ttk
 import numpy as np
 import cv2
@@ -32,6 +33,10 @@ thumbnailImages = []
 currentImage = None
 currentImageNumber = None
 
+def getLocalFile():
+    filename = filedialog.askopenfile(initialdir="/", title="Select video file", filetypes=(("Mp4 files", "*.mp4"),))
+    localPathLabel1["text"] = filename.name
+
 sourceSelectLabel1 = tk.Label(controlFrame1, text="Video Source:", width=15)
 sourceSelectLabel1.grid(padx=2, pady=2, row=0, column=0)
 sourceSelect1 = ttk.Combobox(controlFrame1, state="readonly", values=("clip1", "clip2", "clip3", "Use local file"), width=15)
@@ -39,7 +44,7 @@ sourceSelect1.current(0)
 sourceSelect1.grid(padx=2, pady=2, row=0, column=1)
 localPathLabel1 = tk.Label(controlFrame1, text="", width=15, fg="blue", anchor="w")
 localPathLabel1.grid(padx=2, pady=2, row=1, column=0)
-localPathButton1 = tk.Button(controlFrame1, text="Browse local files", width=15)
+localPathButton1 = tk.Button(controlFrame1, text="Browse local files", command=getLocalFile, width=15)
 localPathButton1.grid(padx=2, pady=2, row=1, column=1)
 fpsLabel1 = tk.Label(controlFrame1, text="Analysis FPS:", width=15)
 fpsLabel1.grid(padx=2, pady=2, row=2, column=0)
